@@ -1,5 +1,6 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
+import ttkbootstrap as tb
+from ttkbootstrap.constants import *
+from ttkbootstrap.dialogs import Messagebox
 from datetime import datetime
 from models import Expense
 from database import DatabaseManager
@@ -11,66 +12,73 @@ class ExpenseTrackerApp:
     def __init__(self, root):
         self.root = root
         self.root.title("Personal Expense Tracker")
-        self.root.geometry("1100x650")
+        self.root.geometry("1150x700")
         self.db = DatabaseManager()
-        self._setup_styles()
         self._build_layout()
         self.refresh_data()
 
-    def _setup_styles(self):
-        style = ttk.Style()
-        style.theme_use("clam")
-        style.configure("Treeview.Heading", font=('Helvetica', 10, 'bold'))
-
     def _build_layout(self):
-        left_frame = ttk.LabelFrame(self.root, text="Manage Expense", padding=15)
-        left_frame.pack(side=tk.LEFT, fill=tk.Y, padx=10, pady=10)
+        main_frame = tb.Frame(self.root, padding=25)
+        main_frame.pack(fill=BOTH, expand=YES)
 
-        ttk.Label(left_frame, text="Amount ($):").pack(anchor=tk.W, pady=(10, 2))
-        self.amount_var = tk.StringVar()
-        ttk.Entry(left_frame, textvariable=self.amount_var).pack(fill=tk.X)
+        # --- Left Panel (Inputs & Buttons) ---
+        left_frame = tb.Labelframe(main_frame, text="Manage Expenses", padding=20, bootstyle="info")
+        left_frame.pack(side=LEFT, fill=Y, padx=(0, 20))
 
-        ttk.Label(left_frame, text="Category:").pack(anchor=tk.W, pady=(10, 2))
-        self.category_var = tk.StringVar()
-        self.category_cb = ttk.Combobox(left_frame, textvariable=self.category_var, state="readonly")
+        tb.Label(left_frame, text="Amount ($):", font=("Helvetica", 10)).pack(anchor=W, pady=(10, 5))
+        self.amount_var = tb.StringVar()
+        tb.Entry(left_frame, textvariable=self.amount_var, bootstyle="primary").pack(fill=X)
+
+        tb.Label(left_frame, text="Category:", font=("Helvetica", 10)).pack(anchor=W, pady=(15, 5))
+        self.category_var = tb.StringVar()
+        self.category_cb = tb.Combobox(left_frame, textvariable=self.category_var, state="readonly",
+                                       bootstyle="primary")
         self.category_cb['values'] = ('Food', 'Transport', 'Education', 'Shopping', 'Entertainment', 'Bills', 'Other')
-        self.category_cb.pack(fill=tk.X)
+        self.category_cb.pack(fill=X)
 
-        ttk.Label(left_frame, text="Date (YYYY-MM-DD):").pack(anchor=tk.W, pady=(10, 2))
-        self.date_var = tk.StringVar(value=datetime.today().strftime('%Y-%m-%d'))
-        ttk.Entry(left_frame, textvariable=self.date_var).pack(fill=tk.X)
+        tb.Label(left_frame, text="Date (YYYY-MM-DD):", font=("Helvetica", 10)).pack(anchor=W, pady=(15, 5))
+        self.date_var = tb.StringVar(value=datetime.today().strftime('%Y-%m-%d'))
+        tb.Entry(left_frame, textvariable=self.date_var, bootstyle="primary").pack(fill=X)
 
-        ttk.Label(left_frame, text="Description:").pack(anchor=tk.W, pady=(10, 2))
-        self.desc_var = tk.StringVar()
-        ttk.Entry(left_frame, textvariable=self.desc_var).pack(fill=tk.X)
+        tb.Label(left_frame, text="Description:", font=("Helvetica", 10)).pack(anchor=W, pady=(15, 5))
+        self.desc_var = tb.StringVar()
+        tb.Entry(left_frame, textvariable=self.desc_var, bootstyle="primary").pack(fill=X)
 
-        ttk.Button(left_frame, text="Add Expense", command=self.add_expense).pack(fill=tk.X, pady=(20, 5))
-        ttk.Button(left_frame, text="Delete Selected", command=self.delete_expense).pack(fill=tk.X, pady=5)
-        ttk.Button(left_frame, text="Export to CSV", command=self.export_data).pack(fill=tk.X, pady=5)
+        tb.Button(left_frame, text="Add Expense", command=self.add_expense, bootstyle="success").pack(fill=X,
+                                                                                                      pady=(35, 10))
+        tb.Button(left_frame, text="Delete Selected", command=self.delete_expense, bootstyle="danger-outline").pack(
+            fill=X, pady=5)
+        tb.Button(left_frame, text="Export to CSV", command=self.export_data, bootstyle="info-outline").pack(fill=X,
+                                                                                                             pady=5)
 
-        right_frame = ttk.Frame(self.root, padding=10)
-        right_frame.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # --- Right Panel (Dashboard, Table, Chart) ---
+        right_frame = tb.Frame(main_frame)
+        right_frame.pack(side=RIGHT, fill=BOTH, expand=YES)
 
-        dash_frame = ttk.Frame(right_frame)
-        dash_frame.pack(fill=tk.X, pady=(0, 10))
+        # Dashboard (Total & Search)
+        dash_frame = tb.Frame(right_frame)
+        dash_frame.pack(fill=X, pady=(0, 20))
 
-        self.total_label = ttk.Label(dash_frame, text="Total Expenses: $0.00", font=('Helvetica', 14, 'bold'))
-        self.total_label.pack(side=tk.LEFT)
+        self.total_label = tb.Label(dash_frame, text="Total Expenses: $0.00", font=("Helvetica", 16, "bold"),
+                                    bootstyle="inverse-primary")
+        self.total_label.pack(side=LEFT)
 
-        ttk.Label(dash_frame, text="Search:").pack(side=tk.LEFT, padx=(50, 5))
-        self.search_var = tk.StringVar()
-        search_entry = ttk.Entry(dash_frame, textvariable=self.search_var)
-        search_entry.pack(side=tk.LEFT, padx=5)
+        tb.Label(dash_frame, text="Search:", font=("Helvetica", 10)).pack(side=LEFT, padx=(50, 5))
+        self.search_var = tb.StringVar()
+        search_entry = tb.Entry(dash_frame, textvariable=self.search_var, bootstyle="secondary")
+        search_entry.pack(side=LEFT, fill=X, expand=YES, padx=5)
         search_entry.bind('<KeyRelease>', self.search_data)
 
-        table_frame = ttk.Frame(right_frame)
-        table_frame.pack(fill=tk.BOTH, expand=True)
+        # Table
+        table_frame = tb.Frame(right_frame)
+        table_frame.pack(fill=BOTH, expand=YES)
 
-        self.chart_frame = ttk.Frame(right_frame, height=250)
-        self.chart_frame.pack(fill=tk.X, pady=10)
+        # Chart
+        self.chart_frame = tb.Frame(right_frame, height=250)
+        self.chart_frame.pack(fill=X, pady=(20, 0))
 
         columns = ('id', 'amount', 'category', 'date', 'description')
-        self.tree = ttk.Treeview(table_frame, columns=columns, show='headings', selectmode='browse')
+        self.tree = tb.Treeview(table_frame, columns=columns, show='headings', selectmode='browse', bootstyle="primary")
 
         self.tree.heading('id', text='ID')
         self.tree.heading('amount', text='Amount')
@@ -78,17 +86,17 @@ class ExpenseTrackerApp:
         self.tree.heading('date', text='Date')
         self.tree.heading('description', text='Description')
 
-        self.tree.column('id', width=40, anchor=tk.CENTER)
-        self.tree.column('amount', width=100, anchor=tk.E)
+        self.tree.column('id', width=40, anchor=CENTER)
+        self.tree.column('amount', width=100, anchor=E)
         self.tree.column('category', width=120)
-        self.tree.column('date', width=100, anchor=tk.CENTER)
+        self.tree.column('date', width=100, anchor=CENTER)
         self.tree.column('description', width=300)
 
-        scrollbar = ttk.Scrollbar(table_frame, orient=tk.VERTICAL, command=self.tree.yview)
+        scrollbar = tb.Scrollbar(table_frame, orient=VERTICAL, command=self.tree.yview)
         self.tree.configure(yscroll=scrollbar.set)
 
-        self.tree.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
-        scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+        self.tree.pack(side=LEFT, fill=BOTH, expand=YES)
+        scrollbar.pack(side=RIGHT, fill=Y)
 
     def add_expense(self):
         try:
@@ -100,7 +108,7 @@ class ExpenseTrackerApp:
             desc = self.desc_var.get()
 
             if not category or not date:
-                messagebox.showwarning("Input Error", "Category and Date are required.")
+                Messagebox.show_warning("Category and Date are required.", "Input Error")
                 return
 
             new_expense = Expense(amount, category, date, desc)
@@ -109,18 +117,18 @@ class ExpenseTrackerApp:
             self.amount_var.set("")
             self.desc_var.set("")
             self.refresh_data()
-            messagebox.showinfo("Success", "Expense added successfully!")
+            Messagebox.show_info("Expense added successfully!", "Success")
 
         except ValueError:
-            messagebox.showerror("Error", "Please enter a valid numeric amount.")
+            Messagebox.show_error("Please enter a valid numeric amount.", "Error")
 
     def delete_expense(self):
         selected = self.tree.selection()
         if not selected:
-            messagebox.showwarning("Selection Error", "Please select an expense to delete.")
+            Messagebox.show_warning("Please select an expense to delete.", "Selection Error")
             return
 
-        if messagebox.askyesno("Confirm", "Are you sure you want to delete this expense?"):
+        if Messagebox.yesno("Are you sure you want to delete this expense?", "Confirm Delete") == "Yes":
             item = self.tree.item(selected[0])
             expense_id = item['values'][0]
             self.db.delete_expense(expense_id)
@@ -146,7 +154,7 @@ class ExpenseTrackerApp:
         category_totals = {}
 
         for exp in expenses:
-            self.tree.insert('', tk.END, values=exp.to_tuple())
+            self.tree.insert('', END, values=exp.to_tuple())
             total_amount += exp.amount
             category_totals[exp.category] = category_totals.get(exp.category, 0) + exp.amount
 
@@ -156,8 +164,8 @@ class ExpenseTrackerApp:
     def export_data(self):
         expenses = self.db.get_all_expenses()
         if not expenses:
-            messagebox.showinfo("Empty", "No data to export.")
+            Messagebox.show_info("No data to export.", "Empty")
             return
 
         filepath = export_expenses_to_csv(expenses)
-        messagebox.showinfo("Success", f"Data exported to:\n{filepath}")
+        Messagebox.show_info(f"Data exported to:\n{filepath}", "Success")s
